@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.10">
+  <POU Name="FB_BitFunctions_Test" Id="{810bb4c3-e51c-44c5-b10d-b52e522ee72a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BitFunctions_Test EXTENDS FB_TestSuite
+VAR
+  _smState : INT := 0;
+  _sSmState : STRING(255) := '';
+  
+  _elseCaseReached : BOOL := FALSE;
+  
+  _bitToCheck : BYTE := 0;
+  _sBitToCheck : STRING := '';
+  _ValueSet : ULINT := 0;
+  _ValueSet1 : ULINT := 0;
+  _ValueGet : ULINT := 0;
+  _getBool : BOOL := FALSE;
+  
+  _resultGet : INT := 0;
+  _resultSet : INT := 0;
+  
+  _index : BYTE := 0;
+
+  resultNotUsed: BOOL := FALSE;
+  
+END_VAR
+VAR_TEMP
+  
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+CASE _smState OF
+  0:  _sSmState := CONCAT(TO_STRING(_smState), ': Init');
+    // register tests
+    TcUnit.TEST(TestName := 'test_SetBit');
+    TcUnit.TEST(TestName := 'test_GetBit');
+    TcUnit.TEST(TestName := 'test_SetBit_OutOfRange');
+    TcUnit.TEST(TestName := 'test_GetBit_OutOfRange');
+    
+    _resultGet :=
+    _resultSet := 0;
+    
+    _bitToCheck := 0;
+    _ValueSet := 1;
+    _ValueGet := 0;
+    _smState := 1;
+    
+  1..64:  _sSmState := CONCAT(TO_STRING(_smState), ': Run Test Bit 0..63');
+    _bitToCheck := TO_BYTE(_smState - 1);
+    _sBitToCheck := TO_STRING(_bitToCheck);
+    
+    //> set bit
+    _ValueSet1 := 0;
+    _ValueSet1 := F_SetBit64(Value := 0, Bitpos := _bitToCheck);
+    
+    IF (_ValueSet <> _ValueSet1) THEN
+      _resultSet := _resultSet + 1;
+    END_IF
+    
+    //> get bit
+    _ValueGet := 0;
+    FOR _index := 0 TO 63 DO
+      _getBool := F_GetBit64(Value := _ValueSet1, Bitpos := _index);
+    IF _getBool THEN
+      _ValueGet := _ValueGet + 1;
+    END_IF
+    END_FOR
+    IF (_ValueGet <> 1) THEN
+      _resultGet := _resultGet + 1;
+    END_IF
+    
+    //> next
+    _ValueSet := SHL(_ValueSet, 1);
+    _smState:= _smState + 1;
+    
+  65:  _sSmState := CONCAT(TO_STRING(_smState), ': result');
+    //> set bit
+    TcUnit.TEST(TestName := 'test_SetBit');
+    THIS^.AssertTrue(
+      Condition  := (_resultSet = 0), 
+      Message := CONCAT(CONCAT('F_SetBit64 = bit differs ', TO_STRING(_resultSet)), ' times'),
+      );
+    resultNotUsed := TcUnit.TEST_FINISHED();
+    
+    //> get bit
+    TcUnit.TEST(TestName := 'test_GetBit');
+    THIS^.AssertTrue(
+      Condition  := (_resultGet = 0), 
+      Message := CONCAT(CONCAT('F_GetBit64 = bit differs ', TO_STRING(_resultGet)), ' times'),
+      );
+    resultNotUsed:= TcUnit.TEST_FINISHED();
+    
+    //> next
+    _smState := 66;
+    
+  66:  _sSmState := CONCAT(TO_STRING(_smState), ': result');
+    //> set bit out of range
+    _ValueSet1 := 0;
+    _ValueSet := F_SetBit64(Value := _ValueSet1, Bitpos := 64);
+    
+    TcUnit.TEST(TestName := 'test_SetBit_OutOfRange');
+    THIS^.AssertTrue(
+      Condition  := (_ValueSet = _ValueSet1), 
+      Message    := 'F_SetBit64 > 64bit = bit changed'
+      );
+    resultNotUsed:= TcUnit.TEST_FINISHED();
+    
+    //> get bit out of range
+    _ValueGet := 16#FFFFFFFFFFFFFFFF;
+    _getBool := F_GetBit64(Value := _ValueGet, Bitpos := 64);
+    
+    TcUnit.TEST(TestName := 'test_GetBit_OutOfRange');
+    THIS^.AssertTrue(
+      Condition  := (_getBool = FALSE), 
+      Message    := 'F_GetBit64  > 64bit = bit changed'
+      );
+    resultNotUsed:= TcUnit.TEST_FINISHED();
+    
+    //> next
+    _smState := 100;
+
+  100:  _sSmState := CONCAT(TO_STRING(_smState), ': finished');
+    ;
+  ELSE
+    _elseCaseReached:= TRUE;
+END_CASE
+
+
+IF _elseCaseReached THEN
+  THIS^.AssertTrue(
+    Condition  := (_elseCaseReached = FALSE), 
+    Message    := 'invalid state in state machine reached'
+    );
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

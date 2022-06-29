@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.10">
+  <POU Name="TEST" Id="{3687160c-057b-47bd-85ba-279fe0b8566e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM TEST
+VAR
+  _initDone : BOOL:= FALSE;
+  _preparationsDone : BOOL:= FALSE;  
+  _unitTestsDone : BOOL:= FALSE;
+  
+  
+  //preparations
+  
+  //list tests here
+  _bitFunctions_Test : FB_BitFunctions_Test;
+  //...
+  
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF _initDone = FALSE THEN
+  Init();
+  RETURN;
+END_IF
+
+IF _preparationsDone = FALSE THEN
+  preparations();
+  RETURN;
+END_IF
+
+//test
+TcUnit.RUN();
+
+_unitTestsDone := TcUnit.GVL_TcUnit.TcUnitRunner.AllTestSuitesFinished;
+]]></ST>
+    </Implementation>
+    <Folder Name="_private" Id="{e749bcbf-fa4f-4454-af58-9e964b4ad41c}" />
+    <Method Name="Init" Id="{0203137e-f26f-4371-9f12-ba46eb2b7bc0}">
+      <Declaration><![CDATA[METHOD PUBLIC Init : BOOL
+VAR_INPUT
+END_VAR
+VAR
+    initResult              : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Init:= FALSE;
+
+// init to be done
+initResult := TRUE;
+
+// result
+IF initResult THEN
+  Init:= TRUE;
+  _initDone:= TRUE;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="preparations" Id="{d8e006a1-25e7-41af-bed5-884bc17e7c08}" FolderPath="_private\">
+      <Declaration><![CDATA[METHOD PRIVATE preparations
+VAR_STAT
+END_VAR
+VAR
+  delayTON : TON := (IN:= FALSE);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[_preparationsDone := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="UnitTestsDone" Id="{13ea6760-ca09-4025-a657-7c70ff523b0c}">
+      <Declaration><![CDATA[{attribute 'monitoring' := 'call'}
+PROPERTY PUBLIC UnitTestsDone : BOOL]]></Declaration>
+      <Get Name="Get" Id="{c8549513-1e35-4300-bb13-f5749cb7acb7}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[UnitTestsDone:= _unitTestsDone;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+  </POU>
+</TcPlcObject>

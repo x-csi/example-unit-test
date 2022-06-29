@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.10">
+  <POU Name="F_GetBit64" Id="{06077c75-72ee-4fd4-87e9-fd36015c4ec4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_GetBit64 : BOOL
+VAR_INPUT
+  Value                         : ULINT;
+  Bitpos                        : BYTE;           //Bitpos: 0..63
+END_VAR
+VAR
+  bitmask                       : ULINT:= 2#0001;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[F_GetBit64:= FALSE;
+
+IF Bitpos > 63 THEN
+  RETURN;
+END_IF
+
+IF Bitpos > 0 THEN
+  bitmask:= SHL(bitmask, Bitpos);
+END_IF
+
+F_GetBit64:= ( ( Value AND bitmask ) > 0 );
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
